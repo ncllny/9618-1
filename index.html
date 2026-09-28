@@ -72,4 +72,23 @@ definitionsSection.innerHTML=`<h2 class="section-title">Essential definitions & 
 function renderDefinitions(){const query=document.getElementById('definitionSearch').value.toLowerCase();const chapter=document.getElementById('definitionChapter').value;const groups=chapterDefinitions.filter(c=>(!chapter||c.n===chapter)).map(c=>({...c,items:c.items.filter(d=>d.join(' ').toLowerCase().includes(query))})).filter(c=>c.items.length);document.getElementById('defs').innerHTML=groups.length?groups.map(c=>`<article class="card" style="margin-bottom:16px"><span class="tag">Chapter ${c.n}</span><h3 style="margin:8px 0;color:inherit">${c.title}</h3>${c.items.map(d=>`<div class="definition"><b>${d[0]}</b><div>${d[1]}<br><span class="tag">Keywords: ${d[2]}</span></div></div>`).join('')}</article>`).join(''):'<div class="card empty">No matching definitions.</div>'}
 renderDefinitions();
 </script>
+<style>
+body.light .controls input,
+body.light .controls select {
+  background:#fff;
+  color:#10243c;
+  border-color:#8ea6bf;
+}
+body.light .controls input::placeholder {
+  color:#526b84;
+  opacity:1;
+}
+body.light .tag {
+  background:#dbeafe;
+  color:#075985;
+}
+body.light .definition {
+  border-bottom-color:#d5e0eb;
+}
+</style>
 
