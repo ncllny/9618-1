@@ -191,7 +191,7 @@ async function loadLiveQuestionBank(){
   buildBankShell();let source='Firebase';try{const response=await fetch(QUESTION_BANK_URL);if(!response.ok)throw new Error('Firebase unavailable');const payload=await response.json();liveQuestions=Array.isArray(payload?.questions)?payload.questions:[];if(!liveQuestions.length)throw new Error('Empty Firebase collection');}catch(error){source='built-in verified index';try{const response=await fetch('data/past-paper-index.json');const payload=await response.json();liveQuestions=payload.questions||[];}catch(fallbackError){liveQuestions=[];}}
   document.getElementById('bankSourceStatus').textContent=`Loaded ${liveQuestions.length} question parts from ${source}. Filters can be combined.`;
   populateBankFilters();window.renderBank();renderTypeStats();
-  const coverage=[...document.querySelectorAll('#dashboard .stat b')].at(-1);if(coverage){coverage.textContent=liveQuestions.length;coverage.nextElementSibling.textContent='Verified Paper 1 parts';}
+  const coverage=[...document.querySelectorAll('#dashboard .stat b')].at(-1);if(coverage){coverage.textContent=liveQuestions.length;coverage.nextElementSibling.textContent='Indexed Paper 1 parts';}
 }
 setTopicLabels();loadLiveQuestionBank();
 </script>
