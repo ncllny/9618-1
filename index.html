@@ -195,4 +195,29 @@ async function loadLiveQuestionBank(){
 }
 setTopicLabels();loadLiveQuestionBank();
 </script>
+<style>
+.sync-card{margin-bottom:16px}.sync-status{font-size:13px;color:#7dd3fc;align-self:center}.sync-code{min-width:260px;letter-spacing:.04em}.sync-note{font-size:12px;margin:8px 0 0}.sync-error{color:#fca5a5}body.light .sync-status{color:#075985}body.light .sync-error{color:#b91c1c}
+</style>
+<script>
+/* Checklist sync uses a high-entropy code as a device-to-device key. */
+const CHECKLIST_SYNC_ROOT='https://project-5532596427341767632-default-rtdb.asia-southeast1.firebasedatabase.app/checklists';
+let checklistSyncKey=localStorage.getItem('9618-checklist-sync-key')||'';
+let checklistUpdatedAt=Number(localStorage.getItem('9618-checklist-updated-at')||0);
+let checklistTimer=null;
+function newSyncCode(){const bytes=new Uint8Array(16);crypto.getRandomValues(bytes);return 'rev-'+[...bytes].map(b=>b.toString(16).padStart(2,'0')).join('');}
+function readChecklist(){try{return JSON.parse(localStorage.getItem('9618-checklist-state')||'{}')}catch(error){return {}}}
+function writeChecklist(state){localStorage.setItem('9618-checklist-state',JSON.stringify(state));Object.entries(state).forEach(([chapter,value])=>localStorage.setItem('c'+chapter,value));}
+function syncUrl(){return `${CHECKLIST_SYNC_ROOT}/${encodeURIComponent(checklistSyncKey)}.json`;}
+function checklistProgress(){const state=readChecklist();const confident=Object.values(chapterNames).filter((_,index)=>state[index+1]==='Confident').length;const el=document.getElementById('progress');if(el)el.textContent=Math.round(confident/12*100)+'%';}
+function renderSyncedChecklist(){const state=readChecklist();const holder=document.getElementById('check');if(!holder)return;holder.innerHTML=`<div class="card sync-card"><h3>Sync checklist across devices</h3><p class="muted">Use the same private sync code on another device. Your confidence levels will then follow you.</p><div class="controls"><input class="sync-code" id="syncCode" aria-label="Checklist sync code" value="${safeText(checklistSyncKey)}" placeholder="Paste your sync code"><button class="primary" onclick="useChecklistSyncCode()">Use this code</button><button class="theme" onclick="createChecklistSyncCode()">Create new code</button><span class="sync-status" id="syncStatus">${checklistSyncKey?'Sync ready':'Not yet synced'}</span></div><p class="muted sync-note">Keep this code private. It is the key used to find this checklist in Firebase.</p></div>`+Object.entries(chapterNames).map(([chapter,topic])=>{const value=state[chapter]||localStorage.getItem('c'+chapter)||'Not Started';return `<label><input type="checkbox" ${value==='Confident'?'checked':''} onchange="toggleChecklistChapter('${chapter}',this.checked)"><span><b>${chapterLabel(chapter,topic)}</b><br><small class="muted">Choose a confidence level; it will sync automatically.</small></span><select onchange="setChecklistChapter('${chapter}',this.value)"><option ${value==='Not Started'?'selected':''}>Not Started</option><option ${value==='Learning'?'selected':''}>Learning</option><option ${value==='Need Practice'?'selected':''}>Need Practice</option><option ${value==='Confident'?'selected':''}>Confident</option></select></label>`}).join('');checklistProgress();}
+function showSyncStatus(message,error=false){const status=document.getElementById('syncStatus');if(status){status.textContent=message;status.classList.toggle('sync-error',error);}}
+async function pushChecklist(){if(!checklistSyncKey)return;const updatedAt=Date.now();checklistUpdatedAt=updatedAt;localStorage.setItem('9618-checklist-updated-at',String(updatedAt));showSyncStatus('Saving…');try{const response=await fetch(syncUrl(),{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({status:readChecklist(),updatedAt})});if(!response.ok)throw new Error('save failed');showSyncStatus('Saved across devices');}catch(error){showSyncStatus('Saved on this device; sync will retry next time',true);}}
+async function pullChecklist(showMessage=false){if(!checklistSyncKey)return;try{const response=await fetch(syncUrl(),{cache:'no-store'});if(!response.ok)throw new Error('load failed');const remote=await response.json();if(remote?.status&&Number(remote.updatedAt||0)>checklistUpdatedAt){checklistUpdatedAt=Number(remote.updatedAt||Date.now());localStorage.setItem('9618-checklist-updated-at',String(checklistUpdatedAt));writeChecklist(remote.status);renderSyncedChecklist();if(showMessage)showSyncStatus('Checklist synced');}else if(!remote){await pushChecklist();}else if(showMessage){showSyncStatus('Checklist synced');}}catch(error){if(showMessage)showSyncStatus('Could not reach sync right now',true);}}
+window.setChecklistChapter=function(chapter,value){const state=readChecklist();state[chapter]=value;writeChecklist(state);checklistProgress();pushChecklist();};
+window.toggleChecklistChapter=function(chapter,checked){window.setChecklistChapter(chapter,checked?'Confident':'Learning');renderSyncedChecklist();};
+window.createChecklistSyncCode=function(){checklistSyncKey=newSyncCode();localStorage.setItem('9618-checklist-sync-key',checklistSyncKey);checklistUpdatedAt=0;localStorage.removeItem('9618-checklist-updated-at');renderSyncedChecklist();pushChecklist();};
+window.useChecklistSyncCode=function(){const input=document.getElementById('syncCode');const code=(input?.value||'').trim().toLowerCase();if(!/^rev-[a-f0-9]{32}$/.test(code)){showSyncStatus('Use a valid rev-… sync code',true);return;}checklistSyncKey=code;localStorage.setItem('9618-checklist-sync-key',checklistSyncKey);checklistUpdatedAt=0;localStorage.removeItem('9618-checklist-updated-at');showSyncStatus('Connecting…');pullChecklist(true);};
+window.progressUpdate=checklistProgress;window.done=checklistProgress;
+renderSyncedChecklist();if(checklistSyncKey){pullChecklist();checklistTimer=setInterval(()=>pullChecklist(),15000);}
+</script>
 
