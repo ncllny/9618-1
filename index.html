@@ -134,4 +134,65 @@ topicFilter.innerHTML='<option value="">All topics</option>'+[...new Set(expande
 window.renderBank=function(){const term=search.value.toLowerCase();const topic=topicFilter.value;const level=difficulty.value;const list=expandedQuestionBank.filter(q=>`${q.id} ${q.topic} ${q.type} ${q.q} ${q.points.join(' ')}`.toLowerCase().includes(term)&&(!topic||q.topic===topic)&&(!level||q.difficulty===level));bankList.innerHTML=`<p class="muted"><b>${list.length}</b> of ${expandedQuestionBank.length} slide-based practice questions</p>`+(list.length?list.map(q=>`<article class="card q"><span class="tag">${q.topic}</span> <span class="tag">${q.type}</span> <span class="tag">${q.difficulty}</span><h3>${q.id} — ${q.q}</h3><p class="muted">${q.marks} marks</p><details><summary>How to get all ${q.marks} marks</summary>${q.points.map((p,i)=>`<p><b>Point ${i+1}:</b> ${p}</p>`).join('')}<p class="source-note">Original practice question based on the supplied revision slides; not an official Cambridge past-paper question.</p></details></article>`).join(''):'<div class="empty">No matching practice questions.</div>')};
 renderBank();
 </script>
+<style>
+.bank-meta{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:7px 0}.bank-meta .tag{margin:0}.bank-count{margin:10px 0 16px}.type-stat{display:flex;justify-content:space-between;gap:10px;width:100%;border:1px solid #27415d;background:#102139;color:#d9e5f2;border-radius:8px;padding:10px 12px;text-align:left;cursor:pointer}.type-stat:hover{border-color:#38bdf8}.type-stat b{color:#fff}.bank-links{display:flex;gap:10px;flex-wrap:wrap}.bank-links a{color:#7dd3fc;font-size:13px}.source-status{font-size:13px}.clear-filters{background:#25384f;color:#fff}.stats-table{width:100%;border-collapse:collapse}.stats-table th,.stats-table td{padding:10px;border-bottom:1px solid #223852;text-align:left}.stats-table button{background:transparent;border:0;color:#7dd3fc;padding:0;cursor:pointer;text-align:left;font:inherit}.mark-select{min-width:105px}@media(max-width:800px){.bank-meta{align-items:flex-start}.stats-table th,.stats-table td{padding:8px 5px;font-size:13px}}
+body.light .type-stat{background:#fff;color:#19324d;border-color:#b8c8d9}body.light .type-stat b{color:#10243c}body.light .bank-links a,body.light .stats-table button{color:#075985}
+</style>
+<script>
+/* Live question-bank layer: Firebase is the primary source; the checked-in index is a resilient fallback. */
+const QUESTION_BANK_URL='https://project-5532596427341767632-default-rtdb.asia-southeast1.firebasedatabase.app/questionBank.json';
+const chapterNames={1:'Information Representation',2:'Communication and Internet Technologies',3:'Hardware',4:'Processor Fundamentals',5:'System Software',6:'Security, Privacy and Data Integrity',7:'Ethics and Ownership',8:'Databases',9:'Computational Thinking',10:'Data Types and Data Structures',11:'Programming',12:'Program Development'};
+const typeOrder=['Define / State','Explain','Describe','Compare','Advantages / Disadvantages','Calculation','Trace / Work Through','Application / Scenario','Identify / Give','Complete / Draw'];
+let liveQuestions=[];
+const chapterLabel=(chapter,topic)=>`Chapter ${chapter} — ${topic||chapterNames[chapter]||'Topic'}`;
+function safeText(value){return String(value||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function setTopicLabels(){
+  const topicCards=[...document.querySelectorAll('#topicsGrid h3')];
+  topicCards.forEach((el,index)=>{const n=index+1;el.textContent=chapterLabel(n,chapterNames[n]);});
+  [...document.querySelectorAll('#bars .barrow span')].forEach((el,index)=>{const n=index+1;el.textContent=chapterLabel(n,chapterNames[n]);});
+  [...document.querySelectorAll('#check b')].forEach((el,index)=>{const n=index+1;el.textContent=chapterLabel(n,chapterNames[n]);});
+  const quickSelect=document.getElementById('quickTopic');if(quickSelect){[...quickSelect.options].forEach(option=>{if(option.value)option.textContent=chapterLabel(option.value,chapterNames[option.value]);});}
+  document.querySelectorAll('#quickResult .quick-card h3').forEach((el,index)=>{const n=(el.dataset.chapter||index+1);el.textContent=chapterLabel(n,chapterNames[n]);});
+  document.getElementById('planList').innerHTML=[
+    ['Day 7',chapterLabel(1,chapterNames[1])+' + '+chapterLabel(4,chapterNames[4]),'Conversions, binary arithmetic and key definitions.'],
+    ['Day 6',chapterLabel(2,chapterNames[2])+' + '+chapterLabel(3,chapterNames[3]),'Trace data paths; practise compare/explain structures.'],
+    ['Day 5',chapterLabel(5,chapterNames[5])+' + '+chapterLabel(6,chapterNames[6])+' + '+chapterLabel(7,chapterNames[7]),'Definitions plus scenario application.'],
+    ['Day 4',chapterLabel(8,chapterNames[8]),'Keys, relationships, normalisation and SQL vocabulary.'],
+    ['Day 3',chapterLabel(9,chapterNames[9])+' + '+chapterLabel(10,chapterNames[10]),'Algorithms, abstraction, decomposition and ADTs.'],
+    ['Day 2',chapterLabel(11,chapterNames[11])+' + '+chapterLabel(12,chapterNames[12]),'Trace code; testing terminology; answer frameworks.'],
+    ['Day 1','Rapid recall + weak spots','Definitions, technical keywords and timed short answers.']
+  ].map(x=>`<div class="day"><b>${x[0]} — ${x[1]}</b><div class="muted">${x[2]}</div></div>`).join('');
+}
+function buildBankShell(){
+  document.getElementById('bank').innerHTML=`<h2 class="section-title">Question Bank</h2><p class="muted">Every indexed record links its exact Paper 1 question paper and matching mark scheme. Question wording is kept brief; open the official source for the full paper.</p><p class="source-status muted" id="bankSourceStatus">Loading the verified index…</p><div class="controls"><input id="bankSearch" aria-label="Search questions" placeholder="Search topic, subtopic or keyword…"><select id="bankTopic"><option value="">All chapters and topics</option></select><select id="bankType"><option value="">All question types</option></select><select id="bankYear"><option value="">All years</option></select><select id="bankSession"><option value="">All sessions</option><option>May/June</option><option>Oct/Nov</option></select><select id="bankMinMarks" class="mark-select"><option value="">Min marks</option>${[1,2,3,4,5,6,7,8].map(n=>`<option value="${n}">${n}+</option>`).join('')}</select><select id="bankMaxMarks" class="mark-select"><option value="">Max marks</option>${[1,2,3,4,5,6,7,8].map(n=>`<option value="${n}">≤ ${n}</option>`).join('')}</select><button class="primary clear-filters" id="clearBankFilters">Clear filters</button></div><div id="bankList"></div>`;
+  ['bankSearch','bankTopic','bankType','bankYear','bankSession','bankMinMarks','bankMaxMarks'].forEach(id=>document.getElementById(id).addEventListener(id==='bankSearch'?'input':'change',window.renderBank));
+  document.getElementById('clearBankFilters').addEventListener('click',()=>{['bankSearch','bankTopic','bankType','bankYear','bankSession','bankMinMarks','bankMaxMarks'].forEach(id=>document.getElementById(id).value='');window.renderBank();});
+}
+function filteredQuestions(){
+  const term=(document.getElementById('bankSearch')?.value||'').toLowerCase();const topic=document.getElementById('bankTopic')?.value||'';const type=document.getElementById('bankType')?.value||'';const year=document.getElementById('bankYear')?.value||'';const session=document.getElementById('bankSession')?.value||'';const min=Number(document.getElementById('bankMinMarks')?.value||0);const max=Number(document.getElementById('bankMaxMarks')?.value||99);
+  return liveQuestions.filter(q=>{const hay=[q.topic,q.subtopic,q.prompt,(q.keywords||[]).join(' '),q.question,(q.questionTypes||[]).join(' ')].join(' ').toLowerCase();return (!term||hay.includes(term))&&(!topic||`${q.chapter}|${q.topic}`===topic)&&(!type||(q.questionTypes||[]).includes(type))&&(!year||String(q.year)===year)&&(!session||q.session===session)&&q.marks>=min&&q.marks<=max;});
+}
+window.renderBank=function(){
+  const list=filteredQuestions();const holder=document.getElementById('bankList');if(!holder)return;
+  holder.innerHTML=`<p class="bank-count muted"><b>${list.length}</b> matching question part${list.length===1?'':'s'} from <b>${liveQuestions.length}</b> indexed Paper 1 records.</p>`+(list.length?list.map(q=>`<article class="card q"><div class="bank-meta"><span class="tag">${safeText(chapterLabel(q.chapter,q.topic)).toUpperCase()}</span>${(q.questionTypes||[]).map(t=>`<span class="tag">${safeText(t).toUpperCase()}</span>`).join('')}</div><h3>9618/${safeText(q.paper)} · ${safeText(q.session)} ${safeText(q.year)} · Question ${safeText(q.question)}</h3><p class="muted">${safeText(q.subtopic)} · ${safeText(q.marks)} mark${q.marks===1?'':'s'}</p><p>${safeText(q.prompt)}</p><details><summary>Approach and marking checklist</summary><p><b>How to approach it:</b> ${safeText(q.explanation)}</p><p><b>Marking checklist:</b></p><ul>${(q.markSchemePoints||[]).map(p=>`<li>${safeText(p)}</li>`).join('')}</ul><p><b>Keywords:</b> ${(q.keywords||[]).map(safeText).join(' · ')}</p><div class="bank-links"><a href="${safeText(q.questionPaperUrl)}" target="_blank" rel="noopener">Open question paper ↗</a><a href="${safeText(q.markSchemeUrl)}" target="_blank" rel="noopener">Open matching mark scheme ↗</a></div></details></article>`).join(''):'<div class="card empty">No question parts match these filters. Try clearing a filter.</div>');
+};
+function populateBankFilters(){
+  const topic=document.getElementById('bankTopic'),type=document.getElementById('bankType'),year=document.getElementById('bankYear');
+  topic.innerHTML='<option value="">All chapters and topics</option>'+[...new Map(liveQuestions.map(q=>[`${q.chapter}|${q.topic}`,chapterLabel(q.chapter,q.topic)])).entries()].sort((a,b)=>a[1].localeCompare(b[1],undefined,{numeric:true})).map(([value,label])=>`<option value="${safeText(value)}">${safeText(label)}</option>`).join('');
+  type.innerHTML='<option value="">All question types</option>'+typeOrder.filter(t=>liveQuestions.some(q=>(q.questionTypes||[]).includes(t))).map(t=>`<option>${safeText(t)}</option>`).join('');
+  year.innerHTML='<option value="">All years</option>'+[...new Set(liveQuestions.map(q=>q.year))].sort().map(y=>`<option>${y}</option>`).join('');
+}
+function renderTypeStats(){
+  const stats=document.getElementById('stats');if(!stats)return;const grouped=typeOrder.map(type=>{const q=liveQuestions.filter(x=>(x.questionTypes||[]).includes(type));return {type,count:q.length,marks:q.reduce((sum,x)=>sum+Number(x.marks||0),0)};}).filter(x=>x.count);
+  stats.innerHTML=`<h2 class="section-title">Question-type statistics</h2><p class="muted">Calculated directly from the ${liveQuestions.length} indexed CAIE Paper 1 question parts. Click a row to open that exact filter in the Question Bank.</p><div class="grid two"><div class="card"><h3>Question types</h3><table class="stats-table"><thead><tr><th>Type</th><th>Parts</th><th>Marks</th></tr></thead><tbody>${grouped.map(x=>`<tr><td><button onclick="filterToType('${safeText(x.type).replace(/'/g,'&#39;')}')">${safeText(x.type)}</button></td><td>${x.count}</td><td>${x.marks}</td></tr>`).join('')}</tbody></table></div><div class="card"><h3>Coverage</h3><p><b>${liveQuestions.length}</b> marked question parts</p><p><b>${new Set(liveQuestions.map(q=>`${q.year}-${q.session}-${q.paper}`)).size}</b> Paper 1 variants</p><p><b>${new Set(liveQuestions.map(q=>q.year)).size}</b> years: ${[...new Set(liveQuestions.map(q=>q.year))].sort().join(', ')}</p><p class="muted">Each record carries its own question-paper and matching mark-scheme link.</p></div></div><h2 class="section-title">Fast type filters</h2><div class="grid topic-grid">${grouped.map(x=>`<button class="type-stat" onclick="filterToType('${safeText(x.type).replace(/'/g,'&#39;')}')"><span>${safeText(x.type)}</span><span><b>${x.count}</b> parts · ${x.marks} marks</span></button>`).join('')}</div>`;
+}
+window.filterToType=function(type){document.querySelector('[data-page="bank"]').click();document.getElementById('bankType').value=type;window.renderBank();};
+async function loadLiveQuestionBank(){
+  buildBankShell();let source='Firebase';try{const response=await fetch(QUESTION_BANK_URL);if(!response.ok)throw new Error('Firebase unavailable');const payload=await response.json();liveQuestions=Array.isArray(payload?.questions)?payload.questions:[];if(!liveQuestions.length)throw new Error('Empty Firebase collection');}catch(error){source='built-in verified index';try{const response=await fetch('data/past-paper-index.json');const payload=await response.json();liveQuestions=payload.questions||[];}catch(fallbackError){liveQuestions=[];}}
+  document.getElementById('bankSourceStatus').textContent=`Loaded ${liveQuestions.length} question parts from ${source}. Filters can be combined.`;
+  populateBankFilters();window.renderBank();renderTypeStats();
+  const coverage=[...document.querySelectorAll('#dashboard .stat b')].at(-1);if(coverage){coverage.textContent=liveQuestions.length;coverage.nextElementSibling.textContent='Verified Paper 1 parts';}
+}
+setTopicLabels();loadLiveQuestionBank();
+</script>
 
