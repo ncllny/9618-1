@@ -218,6 +218,6 @@ window.toggleChecklistChapter=function(chapter,checked){window.setChecklistChapt
 window.createChecklistSyncCode=function(){checklistSyncKey=newSyncCode();localStorage.setItem('9618-checklist-sync-key',checklistSyncKey);checklistUpdatedAt=0;localStorage.removeItem('9618-checklist-updated-at');renderSyncedChecklist();pushChecklist();};
 window.useChecklistSyncCode=function(){const input=document.getElementById('syncCode');const code=(input?.value||'').trim().toLowerCase();if(!/^rev-[a-f0-9]{32}$/.test(code)){showSyncStatus('Use a valid rev-… sync code',true);return;}checklistSyncKey=code;localStorage.setItem('9618-checklist-sync-key',checklistSyncKey);checklistUpdatedAt=0;localStorage.removeItem('9618-checklist-updated-at');showSyncStatus('Connecting…');pullChecklist(true);};
 window.progressUpdate=checklistProgress;window.done=checklistProgress;
-renderSyncedChecklist();if(checklistSyncKey){pullChecklist();checklistTimer=setInterval(()=>pullChecklist(),15000);}
+const checklistIntro=document.querySelector('#checklist > p.muted');if(checklistIntro)checklistIntro.textContent='Use a private sync code to keep your confidence levels aligned across devices.';const progressNote=document.querySelector('#dashboard .stats .stat:nth-child(3) .muted');if(progressNote)progressNote.textContent='Syncs when connected';renderSyncedChecklist();if(checklistSyncKey){pullChecklist();checklistTimer=setInterval(()=>pullChecklist(),15000);}
 </script>
 
