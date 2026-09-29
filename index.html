@@ -267,6 +267,7 @@ async function loadLiveQuestionBank(){
 }
 const activePageKey='caie9618-active-page';
 document.querySelectorAll('.nav button').forEach(button=>button.addEventListener('click',()=>localStorage.setItem(activePageKey,button.dataset.page)));
+addEventListener('beforeunload',()=>{const page=document.querySelector('.nav button.active')?.dataset.page;if(page)localStorage.setItem(activePageKey,page);});
 setTopicLabels();loadLiveQuestionBank().finally(()=>{const page=localStorage.getItem(activePageKey);document.querySelector(`[data-page="${page}"]`)?.click();});
 </script>
 <style>
