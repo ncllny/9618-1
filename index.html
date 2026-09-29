@@ -260,8 +260,8 @@ async function loadQuestionIndex(){
   catch(error){const response=await fetch('data/past-paper-index.json');return response.json();}
 }
 async function loadLiveQuestionBank(){
-  buildBankShell();try{const payload=await loadQuestionIndex();liveQuestions=payload.questions||[];}catch(error){liveQuestions=[];}
-  document.getElementById('bankSourceStatus').textContent=`Loaded ${liveQuestions.length} question parts. Filters can be combined.`;
+  buildBankShell();try{const payload=await loadQuestionIndex();liveQuestions=(payload.questions||[]).filter(question=>String(question.questionText||'').trim());}catch(error){liveQuestions=[];}
+  document.getElementById('bankSourceStatus').textContent=`Loaded ${liveQuestions.length} verified question parts. Filters can be combined.`;
   populateBankFilters();window.renderBank();renderTypeStats();
   const coverage=[...document.querySelectorAll('#dashboard .stat b')].at(-1);if(coverage){coverage.textContent=liveQuestions.length;coverage.nextElementSibling.textContent='Indexed Paper 1 parts';}
 }
