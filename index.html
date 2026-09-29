@@ -188,7 +188,7 @@ function buildBankShell(){
 }
 function filteredQuestions(){
   const term=(document.getElementById('bankSearch')?.value||'').toLowerCase();const topic=document.getElementById('bankTopic')?.value||'';const type=document.getElementById('bankType')?.value||'';const year=document.getElementById('bankYear')?.value||'';const session=document.getElementById('bankSession')?.value||'';const min=Number(document.getElementById('bankMinMarks')?.value||0);const max=Number(document.getElementById('bankMaxMarks')?.value||99);
-  return liveQuestions.filter(q=>{const hay=[q.topic,q.subtopic,q.prompt,(q.keywords||[]).join(' '),q.question,(q.questionTypes||[]).join(' ')].join(' ').toLowerCase();return (!term||hay.includes(term))&&(!topic||`${q.chapter}|${q.topic}`===topic)&&(!type||(q.questionTypes||[]).includes(type))&&(!year||String(q.year)===year)&&(!session||q.session===session)&&q.marks>=min&&q.marks<=max;});
+  return liveQuestions.filter(q=>{const hay=[q.topic,q.subtopic,q.prompt,q.questionText,(q.keywords||[]).join(' '),q.question,(q.questionTypes||[]).join(' ')].join(' ').toLowerCase();return (!term||hay.includes(term))&&(!topic||`${q.chapter}|${q.topic}`===topic)&&(!type||(q.questionTypes||[]).includes(type))&&(!year||String(q.year)===year)&&(!session||q.session===session)&&q.marks>=min&&q.marks<=max;});
 }
 function answerLead(types){
   if((types||[]).includes('Calculation'))return 'Show the working clearly, then give the final answer:';
