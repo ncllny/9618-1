@@ -220,7 +220,7 @@ function studentAnswerHtml(q){
 function escapeRegExp(value){return String(value||'').replace(/[.*+?^${}()|[\]\\]/g,'\\$&');}
 function answerPoints(q){
   const start=new RegExp('^\\s*'+escapeRegExp(q.question)+'(?=\\s|$)','i');
-  return String(q.officialMarking||'').split(/\n+/).map((line,index)=>index===0?line.replace(start,'').trim():line.trim()).map(line=>line.replace(/^[-•…]\s*/,'').replace(/\s{2,}/g,' ').trim()).filter(line=>line&&!/^\d{1,2}$/.test(line)&&!/^see the linked official mark scheme/i.test(line)&&!/^question\s+answer\s+marks$/i.test(line)&&!/^\(?[a-zivx]+\)?$/i.test(line)&&!/\bmark(?:s)?\b.*\b(?:for|per|each|to max)\b/i.test(line));
+  return String(q.officialMarking||'').split(/\n+/).map((line,index)=>index===0?line.replace(start,'').trim():line.trim()).map(line=>line.replace(/^[-•…]\s*/,'').replace(/\s{2,}/g,' ').trim()).map(line=>line.replace(/^([0-9A-Fa-f ]+)\s+\d{1,2}$/, '$1').trim()).filter(line=>line&&!/^\d{1,2}$/.test(line)&&!/^see the linked official mark scheme/i.test(line)&&!/^question\s+answer\s+marks$/i.test(line)&&!/^\(?[a-zivx]+\)?$/i.test(line)&&!/\bmark(?:s)?\b.*\b(?:for|per|each|to max)\b/i.test(line));
 }
 function hasUsableAnswer(q){return Boolean(tailoredAnswers[q.id]||answerPoints(q).length);}
 function examOrder(a,b){
