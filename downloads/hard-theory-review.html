@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#071628">
+  <title>CAIE 9618 Hard Theory Review</title>
+  <style>
+    :root { color-scheme: dark; --bg:#071628; --card:#10243e; --accent:#4ed7ff; --text:#edf6ff; --muted:#b4c4d8; }
+    * { box-sizing:border-box; }
+    body { margin:0; font:18px/1.58 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; background:var(--bg); color:var(--text); }
+    main { max-width:760px; margin:auto; padding:28px 18px 64px; }
+    h1 { font-size:clamp(2rem,8vw,3.35rem); line-height:1.04; margin:0 0 12px; }
+    h2 { color:var(--accent); margin:34px 0 10px; font-size:1.35rem; }
+    p { margin:0 0 18px; }
+    .intro, .controls { background:var(--card); border:1px solid #28466a; border-radius:18px; padding:20px; margin:22px 0; }
+    .controls { position:sticky; top:10px; z-index:2; display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+    button, a.button { border:0; border-radius:12px; min-height:52px; padding:12px 14px; font:inherit; font-weight:700; text-align:center; background:var(--accent); color:#03111f; text-decoration:none; }
+    button.secondary { background:#294661; color:var(--text); }
+    #status { grid-column:1/-1; color:var(--muted); font-size:.9rem; text-align:center; min-height:1.4em; }
+    .note { color:var(--muted); font-size:.92rem; }
+    strong { color:#ffffff; }
+    @media (max-width:420px) { body { font-size:17px; } main { padding-inline:14px; } }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Hard Theory Review</h1>
+    <p>CAIE 9618 Paper 1 · difficult explanation and comparison topics only</p>
+    <section class="intro">
+      <p><strong>Use this on your phone:</strong> tap “Read aloud”, then put your phone down and listen. You do not need a live conversation with me.</p>
+      <p class="note">For offline use, open this page once, then use your browser’s Share menu to save it to Files or add it to your Home Screen.</p>
+    </section>
+    <section class="controls" aria-label="Audio controls">
+      <button id="read">Read aloud</button>
+      <button id="pause" class="secondary">Pause</button>
+      <button id="stop" class="secondary">Stop</button>
+      <span id="status" aria-live="polite">Ready.</span>
+    </section>
+
+    <article id="review">
+      <h2>How to gain explanation marks</h2>
+      <p>For an explain question, make a point, explain how it works, then say why it matters. For four marks, aim for four distinct points or two developed reason-and-effect pairs.</p>
+
+      <h2>Networks</h2>
+      <p><strong>Peer-to-peer</strong> networks have no dedicated central server. Each computer has equal status and shares resources directly. They are simple and cheap for a small network, but security, permissions and backups are difficult to manage centrally.</p>
+      <p><strong>Client-server</strong> networks use dedicated servers to respond to client requests. They allow central file storage, backup, user permissions and security. They suit larger networks, but servers cost money and can become a bottleneck or a single point of failure.</p>
+      <p>In a <strong>star topology</strong>, each device has a separate connection to a central switch. One cable failing affects only one device. A switch sends data only to the correct destination using MAC addresses, reducing unnecessary traffic. However, if the central switch fails, the network fails.</p>
+      <p>A router sends packets between different networks using IP addresses. A switch works within a local area network using MAC addresses. A hub sends received data to every connected device, creating unnecessary traffic and less privacy.</p>
+      <p>In <strong>packet switching</strong>, a message is split into packets. Packets contain the data plus control details, such as destination address and sequence number. They can take different routes, then are checked, reordered and reassembled at the destination.</p>
+
+      <h2>CPU, memory and storage</h2>
+      <p>For the <strong>fetch-execute cycle</strong>: the program counter, or PC, holds the address of the next instruction. Copy PC to MAR. Memory sends the instruction to MDR. Increment PC. Copy MDR to CIR. The control unit decodes the instruction. It sends control signals to execute it using the ALU, accumulator, registers or memory. Store the result.</p>
+      <p>RAM is volatile main memory for programs and data currently in use. ROM is non-volatile and stores permanent startup instructions. Cache is small, fast memory close to the CPU. It stores frequently used instructions and data, reducing CPU waiting time.</p>
+      <p>SRAM does not need refreshing. It is fast and expensive, so it is used for cache. DRAM needs refreshing, but is cheaper, so it is used as main memory. Virtual memory uses secondary storage as extra RAM, but is much slower.</p>
+      <p>An SSD uses flash memory. It has no moving parts, so it is fast, quiet and resistant to shocks, but usually costs more per gigabyte. A hard disk drive uses magnetic platters and moving heads. It provides large capacity cheaply, but is slower and more vulnerable to physical damage.</p>
+
+      <h2>System software</h2>
+      <p>An operating system manages resources. Its jobs include memory management, process management, file management, device management, security, input and output, error handling and providing a user interface.</p>
+      <p>A compiler translates the entire source program before it runs. The finished program usually runs quickly, but it must be recompiled after changes. An interpreter translates and executes one statement at a time. It is helpful during development because errors can be found near the relevant line, but the program is generally slower when it runs.</p>
+
+      <h2>Security and databases</h2>
+      <p>Authentication checks who a user is. Authorisation decides what that user is allowed to access. Encryption turns plaintext into ciphertext using a key, protecting confidentiality if data is intercepted. A digital signature helps prove who sent a message and whether it has changed.</p>
+      <p>Validation checks whether input data is sensible and follows rules, such as a range, type or format. Verification checks whether data was copied or transferred accurately. A checksum is calculated before and after transmission; a mismatch suggests data corruption.</p>
+      <p>A primary key uniquely identifies every record. A foreign key links one table to another table’s primary key. Normalisation reduces duplicated data and avoids update, insertion and deletion problems.</p>
+
+      <h2>Algorithms and software development</h2>
+      <p>Decomposition breaks a large problem into smaller parts. Abstraction removes unnecessary detail. Pattern recognition finds similarities between problems. An algorithm is a finite set of clear steps that solves a problem.</p>
+      <p>The waterfall model completes development stages in order. It suits stable requirements, but late changes are expensive. Iterative development creates a version, gains feedback, then improves it in cycles. It handles changing requirements better, but needs regular user involvement.</p>
+
+      <h2>Testing and maintenance</h2>
+      <p>A syntax error breaks the grammar rules of a language. A logic error allows a program to run but gives the wrong result. A run-time error happens while the program is running, such as division by zero.</p>
+      <p>White-box testing checks internal paths and program logic. Black-box testing checks inputs and outputs without needing knowledge of internal code. Integration testing checks that modules work together. Alpha testing is done in-house. Beta testing uses selected users before general release. Acceptance testing shows the customer that requirements have been met.</p>
+      <p>Normal test data is valid typical input and should be accepted. Extreme test data is valid input at the upper or lower accepted limit. Abnormal data is invalid and should be rejected. Boundary data tests values at or just either side of a limit.</p>
+      <p>Corrective maintenance fixes errors. Adaptive maintenance changes software for new requirements or environments. Perfective maintenance improves an already working system, for example by making it faster or easier to use.</p>
+    </article>
+  </main>
+  <script>
+    const status = document.getElementById('status');
+    const review = document.getElementById('review');
+    let utterance;
+    function setStatus(message) { status.textContent = message; }
+    document.getElementById('read').addEventListener('click', () => {
+      window.speechSynthesis.cancel();
+      utterance = new SpeechSynthesisUtterance(review.innerText);
+      utterance.rate = 0.9;
+      utterance.onend = () => setStatus('Finished.');
+      utterance.onerror = () => setStatus('Your browser could not play the review. Use the PDF with Speak Screen instead.');
+      window.speechSynthesis.speak(utterance);
+      setStatus('Reading aloud…');
+    });
+    document.getElementById('pause').addEventListener('click', () => {
+      if (window.speechSynthesis.paused) { window.speechSynthesis.resume(); setStatus('Reading aloud…'); }
+      else { window.speechSynthesis.pause(); setStatus('Paused.'); }
+    });
+    document.getElementById('stop').addEventListener('click', () => { window.speechSynthesis.cancel(); setStatus('Stopped.'); });
+  </script>
+</body>
+</html>
+
