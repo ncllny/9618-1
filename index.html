@@ -440,4 +440,51 @@ window.toggleChecklistChapter=function(chapter,checked){window.setChecklistChapt
 window.progressUpdate=checklistProgress;window.done=checklistProgress;
 const checklistIntro=document.querySelector('#checklist > p.muted');if(checklistIntro)checklistIntro.textContent='Your progress saves automatically and stays updated across devices.';const progressNote=document.querySelector('#dashboard .stats .stat:nth-child(3) .muted');if(progressNote)progressNote.textContent='Syncs automatically';renderSyncedChecklist();pullChecklist();checklistTimer=setInterval(()=>pullChecklist(),15000);
 </script>
+<style>
+/* The sidebar has one syllabus at a time: the paper switch stays visible, the page list changes. */
+.nav .paper-hidden{display:none!important}.paper2-home-grid{grid-template-columns:repeat(3,minmax(0,1fr));margin-top:18px}.paper2-home-card{cursor:pointer;text-align:left;width:100%;color:inherit}.paper2-home-card h3{color:#fff;margin:8px 0}.paper2-home-card:hover{border-color:#38bdf8;background:#10233a}.p2-quick-grid{grid-template-columns:repeat(2,minmax(0,1fr));margin-top:16px}.p2-quick-card h3{margin:7px 0;color:#fff}.p2-quick-card details{margin-top:12px;background:#081523;border-radius:9px;padding:11px}.p2-quick-card summary{cursor:pointer;color:#7dd3fc;font-weight:800}.light .paper2-home-card h3,.light .p2-quick-card h3{color:#10243c}.light .p2-quick-card details{background:#edf5fc}@media(max-width:800px){.paper2-home-grid,.p2-quick-grid{grid-template-columns:1fr}.nav .p2-nav{font-size:14px!important}}
+</style>
+<script>
+/* Replace the single Paper 2 page with its own compact set of Paper 2 pages. */
+function paper2ViewEsc(text){return String(text).replace(/[&<>\"]/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[char]));}
+function paper2OpenPage(page){
+  document.querySelectorAll('main.content section').forEach(section=>section.classList.remove('active'));
+  document.getElementById(page)?.classList.add('active');
+  document.querySelectorAll('.nav > button').forEach(button=>button.classList.toggle('active',button.dataset.page===page));
+  const labels={paper2home:'Paper 2 dashboard',paper2theory:'Paper 2 theory questions',paper2code:'Paper 2 pseudocode practice',paper2quick:'Paper 2 quick revision'};
+  const heading=document.getElementById('heading');if(heading)heading.textContent=labels[page]||'Paper 2';
+  localStorage.setItem('caie9618-active-page',page);localStorage.setItem('caie9618-selected-paper','paper2');
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+function showOnlyPaper(paper){
+  document.querySelectorAll('.p1-nav').forEach(button=>button.classList.toggle('paper-hidden',paper!=='paper1'));
+  document.querySelectorAll('.p2-nav').forEach(button=>button.classList.toggle('paper-hidden',paper!=='paper2'));
+  document.querySelectorAll('.paper-choice').forEach(button=>button.classList.toggle('active',button.dataset.paper===paper));
+  localStorage.setItem('caie9618-selected-paper',paper);
+}
+function paper2QuickCards(){
+  const picked=[paper2Theory[0],paper2Theory[2],paper2Theory[4],paper2Theory[5]];
+  return picked.map(item=>`<article class="card p2-quick-card"><span class="tag">${paper2ViewEsc(item.area)}</span><h3>${paper2ViewEsc(item.title)}</h3><p><b>Recall:</b> ${paper2ViewEsc(item.question)}</p><details><summary>Show answer</summary><p>${paper2ViewEsc(item.answer)}</p><span class="tag">${paper2ViewEsc(item.keywords)}</span></details></article>`).join('');
+}
+function rebuildPaperNavigation(){
+  const nav=document.getElementById('nav'),main=document.querySelector('main.content');if(!nav||!main||document.getElementById('paper2home'))return;
+  document.querySelectorAll('.nav > button').forEach(button=>button.classList.add('p1-nav'));
+  document.querySelector('.nav > button[data-page="paper2"]')?.remove();
+  document.getElementById('paper2')?.remove();
+  const makePage=(id,html)=>{const section=document.createElement('section');section.id=id;section.innerHTML=html;main.appendChild(section);};
+  makePage('paper2home',`<div class="paper2-hero"><div><div class="eyebrow">AS LEVEL · PAPER 2 · SECTIONS 9–12</div><h2>Paper 2 dashboard</h2><p class="muted">Choose what to revise: theory answers, pseudocode writing or rapid recall.</p></div><span class="tag">Paper 2 only</span></div><div class="grid paper2-home-grid"><button class="card paper2-home-card" type="button" data-p2-open="paper2theory"><span class="tag">Theory</span><h3>Theory questions</h3><p class="muted">Exam-ready answers for computational thinking, data structures, programming and development.</p></button><button class="card paper2-home-card" type="button" data-p2-open="paper2code"><span class="tag">Practice</span><h3>Pseudocode practice</h3><p class="muted">IF, CASE OF, WHILE, REPEAT/UNTIL, FOR, arrays, searches and functions.</p></button><button class="card paper2-home-card" type="button" data-p2-open="paper2quick"><span class="tag">Recall</span><h3>Quick revision</h3><p class="muted">Short Paper 2 prompts: answer in your head, then reveal the key points.</p></button></div>`);
+  makePage('paper2theory',`<div class="eyebrow">AS LEVEL · PAPER 2 · SECTIONS 9–12</div><h2 class="section-title">Paper 2 theory questions</h2><p class="muted">Try each answer before opening it. The wording is original, syllabus-aligned practice.</p><div class="grid paper2-theory-grid">${paper2Theory.map(item=>`<article class="card paper2-card"><div class="p2-section-label">${paper2ViewEsc(item.area)}</div><h3>${paper2ViewEsc(item.title)}</h3><p><b>${paper2ViewEsc(item.question)}</b></p><details><summary>Show exam-ready answer</summary><p>${paper2ViewEsc(item.answer)}</p><span class="tag">Keywords: ${paper2ViewEsc(item.keywords)}</span></details></article>`).join('')}</div>`);
+  makePage('paper2code',`<div class="eyebrow">AS LEVEL · PAPER 2 · PROGRAMMING</div><h2 class="section-title">Pseudocode practice</h2><p class="muted">Write your answer first, then compare it with the model solution and mark guide.</p><div class="controls"><select id="paper2Filter" class="p2-filter" aria-label="Filter pseudocode practice by construct"><option value="">All pseudocode constructs</option>${[...new Set(paper2Practice.map(item=>item.type))].map(type=>`<option>${paper2ViewEsc(type)}</option>`).join('')}</select></div><div class="grid p2-practice" id="paper2Practice"></div>`);
+  makePage('paper2quick',`<div class="eyebrow">AS LEVEL · PAPER 2 · RAPID RECALL</div><h2 class="section-title">Paper 2 quick revision</h2><p class="muted">Say a complete answer before you open the answer. Focus on the exact comparison or explanation being asked.</p><div class="grid p2-quick-grid">${paper2QuickCards()}</div>`);
+  const labels=[['paper2home','Paper 2 Dashboard'],['paper2theory','Theory Questions'],['paper2code','Pseudocode Practice'],['paper2quick','Quick Revision']];
+  labels.forEach(([page,label])=>{const button=document.createElement('button');button.type='button';button.className='p2-nav';button.dataset.page=page;button.textContent=label;button.addEventListener('click',()=>paper2OpenPage(page));nav.appendChild(button);});
+  document.querySelectorAll('[data-p2-open]').forEach(button=>button.addEventListener('click',()=>paper2OpenPage(button.dataset.p2Open)));
+  document.getElementById('paper2Filter')?.addEventListener('change',renderPaper2Practice);renderPaper2Practice();
+  document.querySelectorAll('.p1-nav').forEach(button=>button.addEventListener('click',()=>{showOnlyPaper('paper1');}));
+  document.querySelectorAll('.paper-choice').forEach(button=>button.addEventListener('click',()=>{if(button.dataset.paper==='paper2'){showOnlyPaper('paper2');paper2OpenPage('paper2home');}else{showOnlyPaper('paper1');document.querySelector('.p1-nav[data-page="dashboard"]')?.click();}}));
+  const savedPaper=localStorage.getItem('caie9618-selected-paper');const savedPage=localStorage.getItem('caie9618-active-page');
+  if(savedPaper==='paper2'||['paper2','paper2home','paper2theory','paper2code','paper2quick'].includes(savedPage)){showOnlyPaper('paper2');paper2OpenPage(['paper2home','paper2theory','paper2code','paper2quick'].includes(savedPage)?savedPage:'paper2home');}else{showOnlyPaper('paper1');}
+}
+rebuildPaperNavigation();
+</script>
 
